@@ -1,0 +1,41 @@
+services:
+  # REST API app service
+  app:
+    image: "app:${TAG}"
+    build:
+      context: .
+      target: dev
+      dockerfile: Dockerfile
+    command: air
+    expose:
+      - "${API_PORT}"
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    networks:
+      - qlik
+    volumes:
+      - ./:/app
+    restart: unless-stopped
+  
+  # Postgres service
+  postgres:
+    image: postgres:alpine
+    networks:
+      - qlik
+    environment:
+      POSTGRES_USER: "${DATABASE_USER}"
+      POSTGRES_PASSWORD: "${DATABASE_PASS}"
+      POSTGRES_DB: "${DATABASE_NAME}"
+    expose:
+      - "${DATABASE_PORT}"
+    ports:
+      - "${DATABASE_PORT}:${DATABASE_PORT}"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    command: -p ${DATABASE_PORT}
+
+networks:
+  qlik:
+
+volumes:
+  pg-data:
