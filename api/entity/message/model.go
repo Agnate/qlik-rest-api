@@ -1,30 +1,38 @@
 package message
 
-import (
-	"strconv"
-)
-
-type Input struct {
-	Username string `json:"username"`
-	Message  string `json:"message"`
-}
+// type Input struct {
+// 	UUID    string `json:"user_id"`
+// 	Message string `json:"message"`
+// }
 
 type Message struct {
-	Username   string `json:"username"`
-	CreateDate string `json:"create_date"`
-	Message    string `json:"message"`
-	Palindrome string `json:"is_palindrome"`
+	UUID          string `json:"user_id"`
+	CreateDate    string `json:"create_date"`
+	Message       string `json:"message"`
+	Palindrome    string `json:"is_palindrome"`
+	LastUpdated   string `json:"last_updated_date"`
+	LastUpdatedBy string `json:"last_updated_by"`
 }
 
-func (input *Input) ToModel() *Message {
-	sanitzedMsg := input.Message
-	// createDate := time.Now()
-	isPalindrome := false
+type Messages []*Message
 
-	return &Message{
-		Username: input.Username,
-		Message:  sanitzedMsg,
-		// CreateDate: createDate,
-		Palindrome: strconv.FormatBool(isPalindrome),
-	}
+type MessageService interface {
+	Message(id int) (*Message, error)
+	Messages() ([]*Message, error)
+	CreateMessage(m *Message) error
 }
+
+// func (input *Input) ToModel() *Message {
+// 	sanitzedMsg := input.Message
+// 	// now := time.Now()
+// 	isPalindrome := false
+
+// 	return &Message{
+// 		UUID:    input.UUID,
+// 		Message: sanitzedMsg,
+// 		// CreateDate: now,
+// 		Palindrome: strconv.FormatBool(isPalindrome),
+// 		// LastUpdated: now
+// 		LastUpdatedBy: input.UUID,
+// 	}
+// }

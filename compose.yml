@@ -1,7 +1,7 @@
 services:
-  # REST API app service
-  app:
-    image: "app:${TAG}"
+  # REST API service
+  api:
+    image: "api:${TAG}"
     build:
       context: .
       target: dev
@@ -14,7 +14,7 @@ services:
     networks:
       - qlik
     volumes:
-      - ./:/app
+      - ./:/api
     restart: unless-stopped
   
   # Postgres service

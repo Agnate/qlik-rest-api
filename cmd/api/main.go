@@ -9,7 +9,7 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/agnate/qlikrestapi/api/entity/message"
+	"github.com/agnate/qlikrestapi/api/router"
 	"github.com/agnate/qlikrestapi/config"
 )
 
@@ -17,10 +17,10 @@ import (
 const dbConnection = "%s://%s:%s@%s:%d/%s?sslmode=%s"
 
 func main() {
-	// Load environment config
+	// Load environment config.
 	c := config.New()
 
-	// Connect to database
+	// Connect to database.
 	port, _ := strconv.Atoi(c.Database.Port)
 	connStr := fmt.Sprintf(dbConnection, c.Database.Driver, c.Database.Username, c.Database.Password, c.Database.Host, port, c.Database.DatabaseName, c.Database.SSLMode)
 	log.Print(connStr)
@@ -30,23 +30,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		rows, err := db.Query("SELECT * FROM messages")
-		if err != nil {
-			log.Fatalln(err)
-		}
-		var msg message.Message
-		var found bool = false
-		for rows.Next() {
-			rows.Scan(&msg.Username, &msg.CreateDate, &msg.Message, &msg.Palindrome)
-			//log.Print(order)
-			fmt.Fprintf(w, msg.Username+" - "+msg.CreateDate+" - Palindrome? "+msg.Palindrome+" - Message: '"+msg.Message+"'\n")
-			found = true
-		}
-		if !found {
-			fmt.Fprintf(w, "No messages found.")
-		}
-	})
+	// Initialize API router.
+	router := router.New(db)
+
+	// Serve API router.
 	apiPort, _ := strconv.Atoi(c.API.Port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", apiPort), nil))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", apiPort), router.NewHandler()))
 }

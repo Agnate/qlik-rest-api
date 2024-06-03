@@ -2,12 +2,10 @@ FROM golang:1.22-alpine as base
 
 # DEV environment
 FROM base as dev
-WORKDIR /app
+WORKDIR /api
 # Use air to watch for file reloading during development
 RUN go install github.com/cosmtrek/air@latest
 
-# TODO: Change this to only use go.mod and go.sum
-#COPY . /app/
 COPY go.mod go.sum .env ./
 RUN go mod download
 

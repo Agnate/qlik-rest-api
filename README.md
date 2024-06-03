@@ -17,3 +17,22 @@ Welcome to my repo for the Qlik audition project.
  - Query the API:
    - Open a web browser to `localhost:8080` (changing `8080` to what you set for `API_PORT`)
    - CURL the endpoint in your terminal `curl http://localhost:8080` (changing `8080` to what you set for `API_PORT`)
+
+## Package structure
+
+```
+repo
+|-- api/
+|    |-- entity/
+|    |    |-- message/
+|    |    |-- user/
+|    |-- router/
+|         |-- middleware/
+|-- cmd/
+|    |-- api/
+|         |-- main.go
+|-- config/
+|-- internal/
+|    |-- context/
+|-- tests/
+```
