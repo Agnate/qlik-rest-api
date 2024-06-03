@@ -9,8 +9,8 @@ type RuleUUID struct {
 	Parsed uuid.UUID
 }
 
-func NewRuleUUID(uuid string) (RuleUUID, error) {
-	v := RuleUUID{
+func NewRuleUUID(uuid string) (*RuleUUID, error) {
+	v := &RuleUUID{
 		Raw: uuid,
 	}
 	return v, v.validate()

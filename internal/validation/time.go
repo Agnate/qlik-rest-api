@@ -8,8 +8,8 @@ type RuleTime struct {
 	Parsed time.Time
 }
 
-func NewRuleTime(format string, time string) (RuleTime, error) {
-	v := RuleTime{
+func NewRuleTime(format string, time string) (*RuleTime, error) {
+	v := &RuleTime{
 		Raw:    time,
 		Format: format,
 	}

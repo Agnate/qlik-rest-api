@@ -6,14 +6,22 @@ POST http://localhost:8080/api/v1/messages/268f7cbb-b719-4d5f-b8d3-c03d985b768c
 Accept: application/json
 
 {
-    "message": "kayak"
+    "message": "tobedeleted"
 }
 
 ### UPDATE
-POST http://localhost:8080/api/v1/messages/268f7cbb-b719-4d5f-b8d3-c03d985b768c/2024-06-03T20:48:14.41373Z
+POST http://localhost:8080/api/v1/messages/268f7cbb-b719-4d5f-b8d3-c03d985b768c/2024-06-03T22:38:31.313174Z/update
 Accept: application/json
 
 {
     "message": "okayyes",
-    "last_updated_date": "2024-06-03T21:55:48.115495Z"
+    "last_updated_date": "2024-06-03T22:38:31.313174Z"
+}
+
+### DELETE
+POST http://localhost:8080/api/v1/messages/268f7cbb-b719-4d5f-b8d3-c03d985b768c/2024-06-03T22:38:31.313174Z/delete
+Accept: application/json
+
+{
+    "last_updated_date": "2024-06-03T22:38:31.313174Z"
 }

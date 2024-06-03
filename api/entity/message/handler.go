@@ -26,6 +26,7 @@ func New(db *sql.DB) *API {
 }
 
 func (a *API) List(w http.ResponseWriter, r *http.Request) {
+	// List out data from storage.
 	msgs, err := a.storage.List()
 	if err != nil {
 		util.NoAPIEndpoint(w, err)
@@ -35,15 +36,15 @@ func (a *API) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) ListByUUID(w http.ResponseWriter, r *http.Request) {
-	// TODO: Improve slug management so handler doesn't need to know the index
-	uuidSlugIndex := 0
+	// Validate route data from context.
+	validUUID, err := a.validateUUID(r)
+	if err != nil {
+		util.NoAPIEndpoint(w, err)
+		return
+	}
 
-	// Get route data from context.
-	uuid := myCtx.GetSlug(r.Context(), uuidSlugIndex)
-
-	// TODO: Add validation
-
-	msgs, err := a.storage.ListByUUID(uuid)
+	// List out data from storage.
+	msgs, err := a.storage.ListByUUID(validUUID.Parsed)
 	if err != nil {
 		util.NoAPIEndpoint(w, err)
 		return
@@ -52,22 +53,8 @@ func (a *API) ListByUUID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) Read(w http.ResponseWriter, r *http.Request) {
-	// TODO: Improve slug management so handler doesn't need to know the index
-	uuidSlugIndex := 0
-	createDateSlugIndex := 1
-
-	// Get route data from context.
-	rawUuid := myCtx.GetSlug(r.Context(), uuidSlugIndex)
-	rawCreateDate := myCtx.GetSlug(r.Context(), createDateSlugIndex)
-
-	// Validate API slugs.
-	validUUID, err := validation.NewRuleUUID(rawUuid)
-	if err != nil {
-		util.NoAPIEndpoint(w, err)
-		return
-	}
-
-	validCreateDate, err := validation.NewRuleTime(time.RFC3339Nano, rawCreateDate)
+	// Validate route data from context.
+	validUUID, validCreateDate, err := a.validatePrimaryKey(r)
 	if err != nil {
 		util.NoAPIEndpoint(w, err)
 		return
@@ -83,14 +70,8 @@ func (a *API) Read(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) Create(w http.ResponseWriter, r *http.Request) {
-	// TODO: Improve slug management so handler doesn't need to know the index
-	uuidSlugIndex := 0
-
-	// Get route data from context.
-	rawUuid := myCtx.GetSlug(r.Context(), uuidSlugIndex)
-
-	// Validate API slugs.
-	validUUID, err := validation.NewRuleUUID(rawUuid)
+	// Validate route data from context.
+	validUUID, err := a.validateUUID(r)
 	if err != nil {
 		baddata.New(err).Render(w)
 		return
@@ -122,23 +103,16 @@ func (a *API) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) Update(w http.ResponseWriter, r *http.Request) {
-	// TODO: Improve slug management so handler doesn't need to know the index
-	uuidSlugIndex := 0
-	createDateSlugIndex := 1
-
-	// Get route data from context.
-	rawUuid := myCtx.GetSlug(r.Context(), uuidSlugIndex)
-	rawCreateDate := myCtx.GetSlug(r.Context(), createDateSlugIndex)
-
-	// Validate API slugs.
-	validUUID, err := validation.NewRuleUUID(rawUuid)
+	// Validate route data from context.
+	validUUID, validCreateDate, err := a.validatePrimaryKey(r)
 	if err != nil {
 		util.NoAPIEndpoint(w, err)
 		return
 	}
 
-	validCreateDate, err := validation.NewRuleTime(time.RFC3339Nano, rawCreateDate)
-	if err != nil {
+	// Load existing Message so we can check concurrency.
+	existingMsg, err := a.storage.Read(validUUID.Parsed, validCreateDate.Parsed)
+	if err != nil || existingMsg == nil {
 		util.NoAPIEndpoint(w, err)
 		return
 	}
@@ -150,20 +124,9 @@ func (a *API) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Load existing Message so we can check concurrency.
-	existingMsg, err := a.storage.Read(validUUID.Parsed, validCreateDate.Parsed)
-	if err != nil {
-		util.NoAPIEndpoint(w, err)
-		return
-	}
-
 	// Check concurrency before processing.
 	if !a.isConcurrent(existingMsg, msgInput) {
-		concErr := errors.New("this message has been updated by someone else - please resubmit with most recent last_updated_date")
-		if msgInput.LastUpdated.IsZero() {
-			concErr = errors.New("you must provide the most recent last_updated_date to modify this message")
-		}
-		baddata.New(concErr).Render(w)
+		a.getConcurrentBadData(msgInput).Render(w)
 		return
 	}
 
@@ -186,9 +149,44 @@ func (a *API) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) Delete(w http.ResponseWriter, r *http.Request) {
-	// TODO: Improve slug management so handler doesn't need to know the index
-	// uuidSlugIndex := 0
-	// createDateSlugIndex := 1
+	// Validate route data from context.
+	validUUID, validCreateDate, err := a.validatePrimaryKey(r)
+	if err != nil {
+		util.NoAPIEndpoint(w, err)
+		return
+	}
+
+	// Load existing Message so we can check concurrency.
+	existingMsg, err := a.storage.Read(validUUID.Parsed, validCreateDate.Parsed)
+	if err != nil || existingMsg == nil {
+		util.NoAPIEndpoint(w, err)
+		return
+	}
+
+	// Get data from POST body.
+	msgInput, err := a.getJsonBody(r)
+	if err != nil {
+		baddata.New(err).Render(w)
+		return
+	}
+
+	// Check concurrency before processing.
+	if !a.isConcurrent(existingMsg, msgInput) {
+		a.getConcurrentBadData(msgInput).Render(w)
+		return
+	}
+
+	// Note: No need to process MessageInput as we will use the existing message.
+
+	// Delete message.
+	deletedMsg, err := a.storage.Delete(existingMsg)
+	if err != nil {
+		baddata.New(err).Render(w)
+		return
+	}
+
+	// Output deleted message.
+	a.outputSingle(deletedMsg, w)
 }
 
 func (a *API) outputSingle(msg *Message, w http.ResponseWriter) {
@@ -220,6 +218,7 @@ func (a *API) getJsonBody(r *http.Request) (*MessageInput, error) {
 }
 
 // Convert the a MessageInput object to a Message and fill in missing data.
+// Only used for CREATE and UPDATE. Not needed for DELETE.
 func (a *API) processMessageInput(msgInput *MessageInput, uuid uuid.UUID, createDate time.Time) (*Message, error) {
 	isUpdating := !createDate.IsZero()
 
@@ -251,4 +250,46 @@ func (a *API) processMessageInput(msgInput *MessageInput, uuid uuid.UUID, create
 func (a *API) isConcurrent(existingMsg *Message, msgInput *MessageInput) bool {
 	// Note: We also need to check concurreny as part of our database query.
 	return existingMsg.LastUpdated.Equal(msgInput.LastUpdated)
+}
+
+func (a *API) getConcurrentBadData(msgInput *MessageInput) *baddata.BadData {
+	err := errors.New("this message has been updated by someone else - please resubmit with most recent last_updated_date")
+	if msgInput.LastUpdated.IsZero() {
+		err = errors.New("you must provide the most recent last_updated_date to modify this message")
+	}
+	return baddata.New(err)
+}
+
+func (a *API) validateUUID(r *http.Request) (*validation.RuleUUID, error) {
+	// TODO: Improve slug management so handler doesn't need to know the index
+	uuidSlugIndex := 0
+
+	// Get route data from context.
+	rawUuid := myCtx.GetSlug(r.Context(), uuidSlugIndex)
+
+	// Validate API slugs.
+	return validation.NewRuleUUID(rawUuid)
+}
+
+func (a *API) validatePrimaryKey(r *http.Request) (*validation.RuleUUID, *validation.RuleTime, error) {
+	// TODO: Improve slug management so handler doesn't need to know the index
+	uuidSlugIndex := 0
+	createDateSlugIndex := 1
+
+	// Get route data from context.
+	rawUuid := myCtx.GetSlug(r.Context(), uuidSlugIndex)
+	rawCreateDate := myCtx.GetSlug(r.Context(), createDateSlugIndex)
+
+	// Validate API slugs.
+	validUUID, err := validation.NewRuleUUID(rawUuid)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	validCreateDate, err := validation.NewRuleTime(time.RFC3339Nano, rawCreateDate)
+	if err != nil {
+		return validUUID, nil, err
+	}
+
+	return validUUID, validCreateDate, err
 }

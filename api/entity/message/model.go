@@ -18,6 +18,7 @@ type Message struct {
 	Palindrome    bool      `json:"is_palindrome"`
 	LastUpdated   time.Time `json:"last_updated_date"`
 	LastUpdatedBy uuid.UUID `json:"last_updated_by"`
+	Deleted       bool      `json:"-"`
 }
 
 type Messages []*Message

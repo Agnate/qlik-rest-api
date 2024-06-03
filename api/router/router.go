@@ -32,11 +32,12 @@ func New(db *sql.DB) *Router {
 
 	return &Router{
 		routes: []route{
-			newRoute(http.MethodGet, "/api/v1/messages", msgAPI.List),                    // [LIST]
-			newRoute(http.MethodGet, "/api/v1/messages/([^/]+)", msgAPI.ListByUUID),      // [LIST] UUID
-			newRoute(http.MethodGet, "/api/v1/messages/([^/]+)/([^/]+)", msgAPI.Read),    // [READ] UUID, CreateDate
-			newRoute(http.MethodPost, "/api/v1/messages/([^/]+)", msgAPI.Create),         // [CREATE] UUID --> Body contains: message
-			newRoute(http.MethodPost, "/api/v1/messages/([^/]+)/([^/]+)", msgAPI.Update), // [UPDATE] UUID, CreateDate --> Body contains: message, last_updated_date
+			newRoute(http.MethodGet, "/api/v1/messages", msgAPI.List),                           // [LIST]
+			newRoute(http.MethodGet, "/api/v1/messages/([^/]+)", msgAPI.ListByUUID),             // [LIST] UUID
+			newRoute(http.MethodGet, "/api/v1/messages/([^/]+)/([^/]+)", msgAPI.Read),           // [READ] UUID, CreateDate
+			newRoute(http.MethodPost, "/api/v1/messages/([^/]+)", msgAPI.Create),                // [CREATE] UUID --> Body contains: message
+			newRoute(http.MethodPost, "/api/v1/messages/([^/]+)/([^/]+)/update", msgAPI.Update), // [UPDATE] UUID, CreateDate --> Body contains: message, last_updated_date
+			newRoute(http.MethodPost, "/api/v1/messages/([^/]+)/([^/]+)/delete", msgAPI.Delete), // [DELETE] UUID, CreateDate --> Body contains: last_updated_date
 			newRoute(http.MethodGet, "/api/v1/users", userAPI.List),
 			// newRoute(http.MethodGet, "/api/v1/users/uuid", userAPI.List), // UUID
 		},
