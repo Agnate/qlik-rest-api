@@ -5,11 +5,12 @@ import (
 	"database/sql"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/agnate/qlikrestapi/api/entity/message"
+	"github.com/agnate/qlikrestapi/api/entity/user"
 	myCtx "github.com/agnate/qlikrestapi/internal/context"
+	"github.com/agnate/qlikrestapi/internal/util"
 )
 
 // Contains the routers for API to serve.
@@ -27,10 +28,17 @@ type route struct {
 // Build a new Router containing all of the API routes and handlers.
 func New(db *sql.DB) *Router {
 	msgAPI := message.New(db)
+	userAPI := user.New(db)
 
 	return &Router{
 		routes: []route{
-			newRoute(http.MethodGet, "/api/v1/messages", msgAPI.List),
+			newRoute(http.MethodGet, "/api/v1/messages", msgAPI.List),                    // [LIST]
+			newRoute(http.MethodGet, "/api/v1/messages/([^/]+)", msgAPI.ListByUUID),      // [LIST] UUID
+			newRoute(http.MethodGet, "/api/v1/messages/([^/]+)/([^/]+)", msgAPI.Read),    // [READ] UUID, CreateDate
+			newRoute(http.MethodPost, "/api/v1/messages/([^/]+)", msgAPI.Create),         // [CREATE] UUID --> Body contains: message
+			newRoute(http.MethodPost, "/api/v1/messages/([^/]+)/([^/]+)", msgAPI.Update), // [UPDATE] UUID, CreateDate --> Body contains: message, last_updated_date
+			newRoute(http.MethodGet, "/api/v1/users", userAPI.List),
+			// newRoute(http.MethodGet, "/api/v1/users/uuid", userAPI.List), // UUID
 		},
 	}
 }
@@ -63,7 +71,7 @@ func (rt *Router) serve(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			// Add the regex match to the Context and invoke the route's handler.
-			ctx := myCtx.SetContextRoute(r.Context(), matches[1:])
+			ctx := myCtx.SetContextRouteData(r.Context(), matches[1:])
 			route.handler(w, r.WithContext(ctx))
 			return
 		}
@@ -72,13 +80,8 @@ func (rt *Router) serve(w http.ResponseWriter, r *http.Request) {
 	// inform user that method isn't allowed.
 	if len(allow) > 0 {
 		w.Header().Set("Allow", strings.Join(allow, ", "))
-		http.Error(w, newHttpStatusMsg(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		http.Error(w, util.NewHttpStatusMsg(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
 	}
 	http.NotFound(w, r)
-}
-
-// statusCode: Use constants from http package (ex: [net/http.StatusMethodNotAllowed])
-func newHttpStatusMsg(statusCode int) string {
-	return strconv.Itoa(statusCode) + " " + http.StatusText(statusCode)
 }

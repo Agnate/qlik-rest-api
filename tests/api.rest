@@ -1,0 +1,19 @@
+### LIST
+GET http://localhost:8080/api/v1/messages
+
+### CREATE
+POST http://localhost:8080/api/v1/messages/268f7cbb-b719-4d5f-b8d3-c03d985b768c
+Accept: application/json
+
+{
+    "message": "kayak"
+}
+
+### UPDATE
+POST http://localhost:8080/api/v1/messages/268f7cbb-b719-4d5f-b8d3-c03d985b768c/2024-06-03T20:48:14.41373Z
+Accept: application/json
+
+{
+    "message": "okayyes",
+    "last_updated_date": "2024-06-03T21:55:48.115495Z"
+}

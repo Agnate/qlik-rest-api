@@ -1,11 +1,18 @@
 package user
 
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
 type User struct {
-	UUID       string `json:"user_id"`
-	Email      string `json:"email"`
-	APIKey     string `json:"api_key"`
-	LastAccess string `json:"last_access"`
-	CreateDate string `json:"create_date"`
+	UUID       uuid.UUID `json:"user_id"`
+	Email      string    `json:"email"`
+	APIKey     string    `json:"api_key"`
+	LastAccess time.Time `json:"last_access"`
+	CreateDate time.Time `json:"create_date"`
+	Name       string    `json:"name"`
 }
 
 type Users []*User
