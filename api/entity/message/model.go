@@ -7,6 +7,7 @@ import (
 )
 
 type MessageInput struct {
+	APIKey      string    `json:"api_key"`
 	Message     string    `json:"message"`
 	LastUpdated time.Time `json:"last_updated_date"` // Required for Updates to validate concurrency
 }

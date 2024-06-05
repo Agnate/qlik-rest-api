@@ -13,20 +13,24 @@ type MessageStorage struct {
 	db *sql.DB
 }
 
+// Create a new Message storage container/service.
 func NewMessageStorage(db *sql.DB) *MessageStorage {
 	return &MessageStorage{
 		db: db,
 	}
 }
 
+// Retrieve a list of all Messages.
 func (s *MessageStorage) List() (Messages, error) {
 	return s.scanMessages("SELECT * FROM messages WHERE logical_delete = $1", false)
 }
 
+// Retrieve a list of all Messages for a specific User.
 func (s *MessageStorage) ListByUUID(uuid uuid.UUID) (Messages, error) {
 	return s.scanMessages("SELECT * FROM messages WHERE uuid = $1 AND logical_delete = $2", uuid, false)
 }
 
+// Retrieve a specific Message by primary key (UUID, CreateDate)
 func (s *MessageStorage) Read(uuid uuid.UUID, createDate time.Time) (*Message, error) {
 	msgs, err := s.scanMessages("SELECT * FROM messages WHERE uuid = $1 AND create_date = $2 AND logical_delete = $3", uuid, createDate, false)
 	if err == nil && len(msgs) > 0 {
@@ -55,6 +59,7 @@ func (s *MessageStorage) scanMessages(query string, queryParams ...any) (Message
 	return msgs, nil
 }
 
+// Create a new Message.
 func (s *MessageStorage) Create(msg *Message) (*Message, error) {
 	// Create the new Message.
 	_, err := s.db.Exec("INSERT INTO messages(uuid, message, is_palindrome, last_updated_by) VALUES($1, $2, $3, $4)",
@@ -90,6 +95,7 @@ func (s *MessageStorage) get(uuid uuid.UUID, createDate time.Time) (*Message, er
 	return nil, err
 }
 
+// Update an existing Message.
 func (s *MessageStorage) Update(msg *Message) (*Message, error) {
 	// Update the Message.
 	result, err := s.db.Exec("UPDATE messages SET message = $1, is_palindrome = $2, last_updated_by = $3, last_updated = $4 "+
@@ -121,6 +127,7 @@ func (s *MessageStorage) Update(msg *Message) (*Message, error) {
 	return updatedMsg, nil
 }
 
+// Delete an existing Message.
 func (s *MessageStorage) Delete(msg *Message) (*Message, error) {
 	// Delete the Message.
 	result, err := s.db.Exec("UPDATE messages SET logical_delete = $1, last_updated_by = $2, last_updated = $3 "+

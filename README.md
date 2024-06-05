@@ -39,7 +39,7 @@ Use of custom code vs. modules:
 
 Due to time constraints, the following features are **NOT** implemented:
  
- - **User authentication validation (not implemented):** The original goal was to use an API key implementation to restrict user access to the system.
+ - **User authentication (not implemented):** User authentication should be required to create API keys and restrict user access to the system. Currently anyone can create a new User account and receive an API key.
  - **Robust server logging (not implemented):** Logging and monitoring are important aspects for system health, so a more detailed logging and error handling system should be used.
  - **Automated testing (partially implemented):** Unit and integration tests are important for rapid development. Minimal tests were created to demonstrate capability.
  - **Production-ready build (not implemented):** This development build is outfitted with Air to rebuild during development and regular migration checks at startup. In production we would want features like this disabled/redesigend.
@@ -72,6 +72,7 @@ flowchart TB
 |         └── main.go
 ├── config/
 ├── internal/
+|    ├── apikey/
 |    ├── context/
 |    ├── migrator/
 |    ├── util/
@@ -96,21 +97,42 @@ flowchart TB
 ### Response
 
     HTTP/1.1 200 OK
-    Date: Wed, 05 Jun 2024 00:18:56 GMT
-    Content-Length: 449
-    Content-Type: text/plain; charset=utf-8
+    Content-Type: application/json
+    Date: Wed, 05 Jun 2024 06:00:57 GMT
+    Content-Length: 774
     Connection: close
 
     [
       {
-        "user_id": "ffc44559-044d-4525-ae8a-4bd37f2a3d7a",
-        "last_access": "2024-06-04T23:28:19.580853Z",
+        "user_id": "d2558d85-6ebd-492e-85c6-64687dcb04f2",
+        "api_key": "",
+        "last_access": "2024-06-05T04:25:48.731814Z",
         "name": "Bob Ross"
-      },
+      }
+    ]
+
+## Create a User
+
+### Request
+
+`POST /api/v1/users`
+
+    curl -i -H 'Accept: application/json' -d 'full_name=Bob&email=bob@gmail.com' http://localhost:8080/api/v1/users
+
+### Response
+
+    HTTP/1.1 201 Created
+    Content-Type: application/json
+    Date: Wed, 05 Jun 2024 06:01:53 GMT
+    Content-Length: 167
+    Connection: close
+
+    [
       {
-        "user_id": "0d8577b9-c71b-4cad-8375-227234e58cd4",
-        "last_access": "2024-06-04T23:28:19.580853Z",
-        "name": "Mr Rogers"
+        "user_id": "238208a8-2bc2-4ddd-965c-2eee7c47a23a",
+        "api_key": "6b3877b4-50ab-461b-8f4f-0904521becbe",
+        "last_access": "2024-06-05T06:01:53.107558Z",
+        "name": "Bob"
       }
     ]
 
@@ -125,12 +147,21 @@ flowchart TB
 ### Response
 
     HTTP/1.1 200 OK
-    Date: Wed, 05 Jun 2024 00:25:53 GMT
-    Content-Length: 252
-    Content-Type: text/plain; charset=utf-8
+    Content-Type: application/json
+    Date: Wed, 05 Jun 2024 06:03:23 GMT
+    Content-Length: 501
     Connection: close
 
-    []
+    [
+      {
+        "user_id": "fd06d3e1-c405-4ff3-945c-34b98ef49e8c",
+        "create_date": "2024-06-05T05:24:46.787718Z",
+        "message": "notpalindrome",
+        "is_palindrome": false,
+        "last_updated_date": "2024-06-05T05:24:46.787718Z",
+        "last_updated_by": "fd06d3e1-c405-4ff3-945c-34b98ef49e8c"
+      }
+    ]
 
 ## Get list of User's Messages
 
@@ -138,17 +169,26 @@ flowchart TB
 
 `GET /api/v1/messages/{userId}`
 
-    curl -i -H 'Accept: application/json' http://localhost:8080/api/v1/messages/ffc44559-044d-4525-ae8a-4bd37f2a3d7a
+    curl -i -H 'Accept: application/json' http://localhost:8080/api/v1/messages/fd06d3e1-c405-4ff3-945c-34b98ef49e8c
 
 ### Response
 
     HTTP/1.1 200 OK
-    Date: Wed, 05 Jun 2024 00:25:53 GMT
-    Content-Length: 252
-    Content-Type: text/plain; charset=utf-8
+    Content-Type: application/json
+    Date: Wed, 05 Jun 2024 06:04:54 GMT
+    Content-Length: 501
     Connection: close
 
-    []
+    [
+      {
+        "user_id": "fd06d3e1-c405-4ff3-945c-34b98ef49e8c",
+        "create_date": "2024-06-05T05:24:46.787718Z",
+        "message": "notpalindrome",
+        "is_palindrome": false,
+        "last_updated_date": "2024-06-05T05:24:46.787718Z",
+        "last_updated_by": "fd06d3e1-c405-4ff3-945c-34b98ef49e8c"
+      }
+    ]
 
 ## Get a Message
 
@@ -156,17 +196,26 @@ flowchart TB
 
 `GET /api/v1/messages/{userId}/{createDate}`
 
-    curl -i -H 'Accept: application/json' http://localhost:8080/api/v1/messages/ffc44559-044d-4525-ae8a-4bd37f2a3d7a/2024-06-04T23:28:19.580853Z
+    curl -i -H 'Accept: application/json' http://localhost:8080/api/v1/messages/fd06d3e1-c405-4ff3-945c-34b98ef49e8c/2024-06-05T05:24:46.787718Z
 
 ### Response
 
     HTTP/1.1 200 OK
-    Date: Wed, 05 Jun 2024 00:25:53 GMT
-    Content-Length: 252
-    Content-Type: text/plain; charset=utf-8
+    Content-Type: application/json
+    Date: Wed, 05 Jun 2024 06:06:32 GMT
+    Content-Length: 251
     Connection: close
 
-    []
+    [
+      {
+        "user_id": "fd06d3e1-c405-4ff3-945c-34b98ef49e8c",
+        "create_date": "2024-06-05T05:24:46.787718Z",
+        "message": "notpalindrome",
+        "is_palindrome": false,
+        "last_updated_date": "2024-06-05T05:24:46.787718Z",
+        "last_updated_by": "fd06d3e1-c405-4ff3-945c-34b98ef49e8c"
+      }
+    ]
 
 ## Create a Message
 
@@ -174,17 +223,26 @@ flowchart TB
 
 `POST /api/v1/messages`
 
-    curl -i -H 'Accept: application/json' -d 'message=notpalindrome&api_key=ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad' http://localhost:8080/api/v1/messages
+    curl -i -H 'Accept: application/json' -d 'message=radar&api_key=6b3877b4-50ab-461b-8f4f-0904521becbe' http://localhost:8080/api/v1/messages
 
 ### Response
 
-    HTTP/1.1 201 CREATE
-    Date: Wed, 05 Jun 2024 00:25:53 GMT
-    Content-Length: 252
-    Content-Type: text/plain; charset=utf-8
+    HTTP/1.1 201 Created
+    Content-Type: application/json
+    Date: Wed, 05 Jun 2024 06:08:16 GMT
+    Content-Length: 242
     Connection: close
 
-    []
+    [
+      {
+        "user_id": "fd06d3e1-c405-4ff3-945c-34b98ef49e8c",
+        "create_date": "2024-06-05T06:08:16.349294Z",
+        "message": "radar",
+        "is_palindrome": true,
+        "last_updated_date": "2024-06-05T06:08:16.349294Z",
+        "last_updated_by": "fd06d3e1-c405-4ff3-945c-34b98ef49e8c"
+      }
+    ]
 
 ## Update a Message
 
@@ -192,17 +250,26 @@ flowchart TB
 
 `PUT /api/v1/messages/{userId}/{createDate}`
 
-    curl -i -H 'Accept: application/json' -X PUT -d 'message=newmessage&last_updated=2024-06-05T00:25:49.621704Z&api_key=ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad' http://localhost:8080/api/v1/messages/ffc44559-044d-4525-ae8a-4bd37f2a3d7a/2024-06-04T23:28:19.580853Z
+    curl -i -H 'Accept: application/json' -X PUT -d 'message=radar&api_key=6b3877b4-50ab-461b-8f4f-0904521becbe&last_updated=2024-06-05T06:08:16.349294Z' http://localhost:8080/api/v1/messages/fd06d3e1-c405-4ff3-945c-34b98ef49e8c/2024-06-05T06:08:16.349294Z
 
 ### Response
 
-    HTTP/1.1 201 PUT
-    Date: Wed, 05 Jun 2024 00:25:53 GMT
-    Content-Length: 252
-    Content-Type: text/plain; charset=utf-8
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+    Date: Wed, 05 Jun 2024 06:10:01 GMT
+    Content-Length: 243
     Connection: close
 
-    []
+    [
+      {
+        "user_id": "fd06d3e1-c405-4ff3-945c-34b98ef49e8c",
+        "create_date": "2024-06-05T06:08:16.349294Z",
+        "message": "sword",
+        "is_palindrome": false,
+        "last_updated_date": "2024-06-05T06:10:01.726417Z",
+        "last_updated_by": "fd06d3e1-c405-4ff3-945c-34b98ef49e8c"
+      }
+    ]
 
 ## Delete a Message
 
@@ -210,14 +277,23 @@ flowchart TB
 
 `DELETE /api/v1/messages/{userId}/{createDate}`
 
-    curl -i -H 'Accept: application/json' -X DELETE -d 'last_updated=2024-06-05T00:25:49.621704Z&api_key=ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad' http://localhost:8080/api/v1/messages/ffc44559-044d-4525-ae8a-4bd37f2a3d7a/2024-06-04T23:28:19.580853Z
+    curl -i -H 'Accept: application/json' -X DELETE -d 'api_key=6b3877b4-50ab-461b-8f4f-0904521becbe&last_updated=2024-06-05T06:10:01.726417Z' http://localhost:8080/api/v1/messages/fd06d3e1-c405-4ff3-945c-34b98ef49e8c/2024-06-05T06:08:16.349294Z
 
 ### Response
 
-    HTTP/1.1 201 DELETE
-    Date: Wed, 05 Jun 2024 00:25:53 GMT
-    Content-Length: 252
-    Content-Type: text/plain; charset=utf-8
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+    Date: Wed, 05 Jun 2024 06:11:50 GMT
+    Content-Length: 243
     Connection: close
 
-    []
+    [
+      {
+        "user_id": "fd06d3e1-c405-4ff3-945c-34b98ef49e8c",
+        "create_date": "2024-06-05T06:08:16.349294Z",
+        "message": "sword",
+        "is_palindrome": false,
+        "last_updated_date": "2024-06-05T06:11:50.872782Z",
+        "last_updated_by": "fd06d3e1-c405-4ff3-945c-34b98ef49e8c"
+      }
+    ]

@@ -35,16 +35,6 @@ func Status500APIError(w http.ResponseWriter, err error) {
 	http.Error(w, NewHttpStatusMsg(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
-// 200 Ok - Used to output successful API response.
-func Status200APIOk(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusOK)
-}
-
-// 201 CREATE - Used to output successful API response.
-func Status201APICreate(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusCreated)
-}
-
 // Writes out content-type header for JSON.
 func APIJsonHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")

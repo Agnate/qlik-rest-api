@@ -1,30 +1,48 @@
 ### Users - LIST
 GET http://localhost:8080/api/v1/users
 
+### Users - CREATE
+POST http://localhost:8080/api/v1/users
+Accept: application/json
+
+{
+    "full_name": "Create Test5",
+    "email": "create.test5@gmail.com"
+}
+
 ### Messages - LIST
 GET http://localhost:8080/api/v1/messages
 
-### CREATE
-POST http://localhost:8080/api/v1/messages/ffc44559-044d-4525-ae8a-4bd37f2a3d7a
+### Messages - LIST by UUID
+GET http://localhost:8080/api/v1/messages/fd06d3e1-c405-4ff3-945c-34b98ef49e8c
+
+### Messages - READ
+GET http://localhost:8080/api/v1/messages/fd06d3e1-c405-4ff3-945c-34b98ef49e8c/2024-06-05T06:08:16.349294Z
+
+### Messages - CREATE
+POST http://localhost:8080/api/v1/messages
 Accept: application/json
 
 {
-    "message": "notpalindrome"
+    "api_key": "0447f30d-f265-4002-b98f-04ba99606f3c",
+    "message": "radar"
 }
 
-### UPDATE
-POST http://localhost:8080/api/v1/messages/268f7cbb-b719-4d5f-b8d3-c03d985b768c/2024-06-03T22:38:31.313174Z/update
+### Messages - UPDATE
+PUT http://localhost:8080/api/v1/messages/fd06d3e1-c405-4ff3-945c-34b98ef49e8c/2024-06-05T06:08:16.349294Z
 Accept: application/json
 
 {
-    "message": "okayyes",
-    "last_updated_date": "2024-06-03T22:38:31.313174Z"
+    "api_key": "0447f30d-f265-4002-b98f-04ba99606f3c",
+    "message": "sword",
+    "last_updated_date": "2024-06-05T06:08:16.349294Z"
 }
 
-### DELETE
-POST http://localhost:8080/api/v1/messages/268f7cbb-b719-4d5f-b8d3-c03d985b768c/2024-06-03T22:38:31.313174Z/delete
+### Messages - DELETE
+DELETE http://localhost:8080/api/v1/messages/fd06d3e1-c405-4ff3-945c-34b98ef49e8c/2024-06-05T06:08:16.349294Z
 Accept: application/json
 
 {
-    "last_updated_date": "2024-06-03T22:38:31.313174Z"
+    "api_key": "0447f30d-f265-4002-b98f-04ba99606f3c",
+    "last_updated_date": "2024-06-05T06:10:01.726417Z"
 }
