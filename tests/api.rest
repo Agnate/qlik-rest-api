@@ -6,8 +6,8 @@ POST http://localhost:8080/api/v1/users
 Accept: application/json
 
 {
-    "full_name": "Create Test5",
-    "email": "create.test5@gmail.com"
+    "full_name": "Create Test1",
+    "email": "create.test1@gmail.com"
 }
 
 ### Messages - LIST
@@ -24,25 +24,46 @@ POST http://localhost:8080/api/v1/messages
 Accept: application/json
 
 {
-    "api_key": "0447f30d-f265-4002-b98f-04ba99606f3c",
+    "api_key": "b16fc69c-0470-4821-a248-be54092ad261",
     "message": "radar"
 }
 
 ### Messages - UPDATE
-PUT http://localhost:8080/api/v1/messages/fd06d3e1-c405-4ff3-945c-34b98ef49e8c/2024-06-05T06:08:16.349294Z
+PUT http://localhost:8080/api/v1/messages/ffbbb7e8-18cf-4bdb-83f4-3ed589ce9357/2024-06-05T14:07:04.173931Z
 Accept: application/json
 
 {
-    "api_key": "0447f30d-f265-4002-b98f-04ba99606f3c",
+    "api_key": "b16fc69c-0470-4821-a248-be54092ad261",
     "message": "sword",
-    "last_updated_date": "2024-06-05T06:08:16.349294Z"
+    "last_updated_date": "2024-06-05T14:07:04.173931Z"
+}
+
+### Messages - UPDATE using _method in body (not supported)
+POST http://localhost:8080/api/v1/messages/ffbbb7e8-18cf-4bdb-83f4-3ed589ce9357/2024-06-05T14:07:04.173931Z
+Accept: application/json
+
+{
+    "_method": "PUT",
+    "api_key": "b16fc69c-0470-4821-a248-be54092ad261",
+    "message": "trigger",
+    "last_updated_date": "2024-06-05T14:08:27.217754Z"
+}
+
+### Messages - UPDATE using _method in URL (not supported)
+POST http://localhost:8080/api/v1/messages/ffbbb7e8-18cf-4bdb-83f4-3ed589ce9357/2024-06-05T14:07:04.173931Z?_method=PUT
+Accept: application/json
+
+{
+    "api_key": "b16fc69c-0470-4821-a248-be54092ad261",
+    "message": "trigger",
+    "last_updated_date": "2024-06-05T14:08:27.217754Z"
 }
 
 ### Messages - DELETE
-DELETE http://localhost:8080/api/v1/messages/fd06d3e1-c405-4ff3-945c-34b98ef49e8c/2024-06-05T06:08:16.349294Z
+DELETE http://localhost:8080/api/v1/messages/ffbbb7e8-18cf-4bdb-83f4-3ed589ce9357/2024-06-05T14:07:04.173931Z
 Accept: application/json
 
 {
-    "api_key": "0447f30d-f265-4002-b98f-04ba99606f3c",
+    "api_key": "b16fc69c-0470-4821-a248-be54092ad261",
     "last_updated_date": "2024-06-05T06:10:01.726417Z"
 }

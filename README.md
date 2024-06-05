@@ -27,7 +27,7 @@ This project will use Docker to create a Golang server and Postgres database to 
 **General system design:**
 
  - Anyone can create a User account (and be assigned an API key).
- - Users can view all Messages in the system using their API key.
+ - Anyone can view Messages in the system.
  - Users can only create, update, and delete their own Messages using their API key.
 
 **Notes about current implementation:**

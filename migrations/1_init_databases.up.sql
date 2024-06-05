@@ -40,6 +40,3 @@ TABLESPACE pg_default;
 
 ALTER TABLE IF EXISTS messages
     OWNER to postgres;
-
-INSERT INTO users (email, api_key, full_name) VALUES ('bobross@gmail.com', 'very-secure-api-key', 'Bob Ross');
-INSERT INTO users (email, api_key, full_name) VALUES ('mrrogers@gmail.com', 'another-equally-secure-api-key', 'Mr Rogers');

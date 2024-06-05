@@ -67,7 +67,9 @@ func (rt *Router) serve(w http.ResponseWriter, r *http.Request) {
 		// Use regex to match the route and store the match in the Context.
 		matches := route.regex.FindStringSubmatch(r.URL.Path)
 		if len(matches) > 0 {
-			// Check that request and route match for their GET/POST method.
+			// TODO: Add support for _method in JSON body and URL parameters.
+
+			// Check that request and route match for their GET/POST/PUT/DELETE method.
 			if r.Method != route.method {
 				allow = append(allow, route.method)
 				continue
