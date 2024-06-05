@@ -11,6 +11,7 @@ import (
 
 	"github.com/agnate/qlikrestapi/api/router"
 	"github.com/agnate/qlikrestapi/config"
+	"github.com/agnate/qlikrestapi/internal/migrator"
 )
 
 // "driver://user:pass@host:port/dbName?sslmode=[enable|disable]"
@@ -23,12 +24,20 @@ func main() {
 	// Connect to database.
 	port, _ := strconv.Atoi(c.Database.Port)
 	connStr := fmt.Sprintf(dbConnection, c.Database.Driver, c.Database.Username, c.Database.Password, c.Database.Host, port, c.Database.DatabaseName, c.Database.SSLMode)
-	log.Print(connStr)
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Create migrator and run it.
+	migrator := migrator.New("./migrations/", c.Database.DatabaseName)
+	err = migrator.Run(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// TODO: Add auth middleware between http and router.
 
 	// Initialize API router.
 	router := router.New(db)

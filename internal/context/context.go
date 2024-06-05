@@ -1,6 +1,9 @@
 package context
 
-import "context"
+import (
+	"context"
+	"errors"
+)
 
 type ContextRouteKey struct{}
 
@@ -12,7 +15,12 @@ func SetContextRouteData(ctx context.Context, value any) context.Context {
 	return context.WithValue(ctx, ContextRouteKey{}, value)
 }
 
-func GetSlug(ctx context.Context, index int) string {
+// Get the slug from the route URL based on index.
+func GetSlug(ctx context.Context, index int) (string, error) {
 	data := GetContextRouteData(ctx).([]string)
-	return data[index]
+	// data, ok to ensure we can convert to []string
+	if len(data) <= index {
+		return "", errors.New("invalid slug")
+	}
+	return data[index], nil
 }

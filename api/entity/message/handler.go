@@ -19,108 +19,136 @@ type API struct {
 	storage *MessageStorage
 }
 
+// Create a new Messages API handler.
 func New(db *sql.DB) *API {
 	return &API{
 		storage: NewMessageStorage(db),
 	}
 }
 
+// Retrieve a list of all Messages.
 func (a *API) List(w http.ResponseWriter, r *http.Request) {
 	// List out data from storage.
 	msgs, err := a.storage.List()
 	if err != nil {
-		util.NoAPIEndpoint(w, err)
+		util.Status404NoAPIEndpoint(w, r, err)
 		return
 	}
-	a.outputList(msgs, w)
+
+	// Output list of messages.
+	if err := a.outputList(msgs, w); err != nil {
+		util.Status500APIError(w, errors.New("could not parse data to json"))
+	}
+
+	util.Status200APIOk(w)
 }
 
+// Retrieve list of all Messages for specific User.
 func (a *API) ListByUUID(w http.ResponseWriter, r *http.Request) {
 	// Validate route data from context.
 	validUUID, err := a.validateUUID(r)
 	if err != nil {
-		util.NoAPIEndpoint(w, err)
+		util.Status404NoAPIEndpoint(w, r, err)
 		return
 	}
 
 	// List out data from storage.
 	msgs, err := a.storage.ListByUUID(validUUID.Parsed)
 	if err != nil {
-		util.NoAPIEndpoint(w, err)
+		util.Status404NoAPIEndpoint(w, r, err)
 		return
 	}
-	a.outputList(msgs, w)
+
+	// Output list of messages.
+	if err := a.outputList(msgs, w); err != nil {
+		util.Status500APIError(w, errors.New("could not parse data to json"))
+	}
+
+	util.Status200APIOk(w)
 }
 
+// Return a specific Message based on primary key (UUID, CreateDate).
 func (a *API) Read(w http.ResponseWriter, r *http.Request) {
 	// Validate route data from context.
 	validUUID, validCreateDate, err := a.validatePrimaryKey(r)
 	if err != nil {
-		util.NoAPIEndpoint(w, err)
+		util.Status404NoAPIEndpoint(w, r, err)
 		return
 	}
 
 	// Read in data from storage.
 	msg, err := a.storage.Read(validUUID.Parsed, validCreateDate.Parsed)
 	if err != nil {
-		util.NoAPIEndpoint(w, err)
+		util.Status404NoAPIEndpoint(w, r, err)
 		return
 	}
-	a.outputSingle(msg, w)
+
+	// Output the message.
+	if err := a.outputSingle(msg, w); err != nil {
+		util.Status500APIError(w, errors.New("could not parse data to json"))
+	}
+
+	util.Status200APIOk(w)
 }
 
+// Create and return a new Message.
 func (a *API) Create(w http.ResponseWriter, r *http.Request) {
 	// Validate route data from context.
 	validUUID, err := a.validateUUID(r)
 	if err != nil {
-		baddata.New(err).Render(w)
+		baddata.New400BadData(err).Render(w)
 		return
 	}
 
 	// Get data from POST body.
 	msgInput, err := a.getJsonBody(r)
 	if err != nil {
-		baddata.New(err).Render(w)
+		baddata.New400BadData(err).Render(w)
 		return
 	}
 
 	// Validate and process message input.
 	msg, err := a.processMessageInput(msgInput, validUUID.Parsed, time.Time{})
 	if err != nil {
-		baddata.New(err).Render(w)
+		baddata.New400BadData(err).Render(w)
 		return
 	}
 
 	// Create message.
 	newMsg, err := a.storage.Create(msg)
 	if err != nil {
-		baddata.New(err).Render(w)
+		baddata.New400BadData(err).Render(w)
 		return
 	}
 
 	// Output newly-created message.
-	a.outputSingle(newMsg, w)
+	if err := a.outputSingle(newMsg, w); err != nil {
+		util.Status500APIError(w, errors.New("could not parse data to json"))
+	}
+
+	util.Status201APICreate(w)
 }
 
+// Update and return an existing Message.
 func (a *API) Update(w http.ResponseWriter, r *http.Request) {
 	// Validate route data from context.
 	validUUID, validCreateDate, err := a.validatePrimaryKey(r)
 	if err != nil {
-		util.NoAPIEndpoint(w, err)
+		util.Status404NoAPIEndpoint(w, r, err)
 		return
 	}
 
 	// Load existing Message so we can check concurrency.
 	existingMsg, err := a.storage.Read(validUUID.Parsed, validCreateDate.Parsed)
 	if err != nil || existingMsg == nil {
-		util.NoAPIEndpoint(w, err)
+		util.Status404NoAPIEndpoint(w, r, err)
 		return
 	}
 
 	// Get data from POST body.
 	msgInput, err := a.getJsonBody(r)
 	if err != nil {
-		baddata.New(err).Render(w)
+		baddata.New400BadData(err).Render(w)
 		return
 	}
 
@@ -133,40 +161,45 @@ func (a *API) Update(w http.ResponseWriter, r *http.Request) {
 	// Validate and process message input.
 	msg, err := a.processMessageInput(msgInput, validUUID.Parsed, validCreateDate.Parsed)
 	if err != nil {
-		baddata.New(err).Render(w)
+		baddata.New400BadData(err).Render(w)
 		return
 	}
 
 	// Update message.
 	updatedMsg, err := a.storage.Update(msg)
 	if err != nil {
-		baddata.New(err).Render(w)
+		baddata.New400BadData(err).Render(w)
 		return
 	}
 
 	// Output updated message.
-	a.outputSingle(updatedMsg, w)
+	if err := a.outputSingle(updatedMsg, w); err != nil {
+		util.Status500APIError(w, errors.New("could not parse data to json"))
+	}
+
+	util.Status200APIOk(w)
 }
 
+// Delete an existing Message.
 func (a *API) Delete(w http.ResponseWriter, r *http.Request) {
 	// Validate route data from context.
 	validUUID, validCreateDate, err := a.validatePrimaryKey(r)
 	if err != nil {
-		util.NoAPIEndpoint(w, err)
+		util.Status404NoAPIEndpoint(w, r, err)
 		return
 	}
 
 	// Load existing Message so we can check concurrency.
 	existingMsg, err := a.storage.Read(validUUID.Parsed, validCreateDate.Parsed)
 	if err != nil || existingMsg == nil {
-		util.NoAPIEndpoint(w, err)
+		util.Status404NoAPIEndpoint(w, r, err)
 		return
 	}
 
 	// Get data from POST body.
 	msgInput, err := a.getJsonBody(r)
 	if err != nil {
-		baddata.New(err).Render(w)
+		baddata.New400BadData(err).Render(w)
 		return
 	}
 
@@ -181,29 +214,37 @@ func (a *API) Delete(w http.ResponseWriter, r *http.Request) {
 	// Delete message.
 	deletedMsg, err := a.storage.Delete(existingMsg)
 	if err != nil {
-		baddata.New(err).Render(w)
+		baddata.New400BadData(err).Render(w)
 		return
 	}
 
 	// Output deleted message.
-	a.outputSingle(deletedMsg, w)
+	if err := a.outputSingle(deletedMsg, w); err != nil {
+		util.Status500APIError(w, errors.New("could not parse data to json"))
+	}
+
+	util.Status200APIOk(w)
 }
 
-func (a *API) outputSingle(msg *Message, w http.ResponseWriter) {
-	a.outputList([]*Message{msg}, w)
+func (a *API) outputSingle(msg *Message, w http.ResponseWriter) error {
+	return a.outputList([]*Message{msg}, w)
 }
 
-func (a *API) outputList(msgs Messages, w http.ResponseWriter) {
+func (a *API) outputList(msgs Messages, w http.ResponseWriter) error {
 	if len(msgs) <= 0 {
+		util.APIJsonHeaders(w)
 		fmt.Fprint(w, "[]")
-		return
+		return nil
 	}
 
 	// TODO: Support JSON and XML by allowing user to pass optional
 	// parameters to the API call to decide the format.
 	if err := json.NewEncoder(w).Encode(msgs); err != nil {
-		return
+		return err
 	}
+
+	util.APIJsonHeaders(w)
+	return nil
 }
 
 // Parse the JSON body of a request.
@@ -257,7 +298,7 @@ func (a *API) getConcurrentBadData(msgInput *MessageInput) *baddata.BadData {
 	if msgInput.LastUpdated.IsZero() {
 		err = errors.New("you must provide the most recent last_updated_date to modify this message")
 	}
-	return baddata.New(err)
+	return baddata.New400BadData(err)
 }
 
 func (a *API) validateUUID(r *http.Request) (*validation.RuleUUID, error) {
@@ -265,7 +306,10 @@ func (a *API) validateUUID(r *http.Request) (*validation.RuleUUID, error) {
 	uuidSlugIndex := 0
 
 	// Get route data from context.
-	rawUuid := myCtx.GetSlug(r.Context(), uuidSlugIndex)
+	rawUuid, err := myCtx.GetSlug(r.Context(), uuidSlugIndex)
+	if err != nil {
+		return nil, err
+	}
 
 	// Validate API slugs.
 	return validation.NewRuleUUID(rawUuid)
@@ -277,8 +321,15 @@ func (a *API) validatePrimaryKey(r *http.Request) (*validation.RuleUUID, *valida
 	createDateSlugIndex := 1
 
 	// Get route data from context.
-	rawUuid := myCtx.GetSlug(r.Context(), uuidSlugIndex)
-	rawCreateDate := myCtx.GetSlug(r.Context(), createDateSlugIndex)
+	rawUuid, err := myCtx.GetSlug(r.Context(), uuidSlugIndex)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	rawCreateDate, err := myCtx.GetSlug(r.Context(), createDateSlugIndex)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	// Validate API slugs.
 	validUUID, err := validation.NewRuleUUID(rawUuid)

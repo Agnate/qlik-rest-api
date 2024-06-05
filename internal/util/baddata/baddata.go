@@ -14,7 +14,7 @@ type BadData struct {
 }
 
 // Create a BadData entry to be displayed to the user in the API body.
-func New(err error) *BadData {
+func New400BadData(err error) *BadData {
 	return &BadData{
 		ErrorMsg: err.Error(),
 		err:      err,

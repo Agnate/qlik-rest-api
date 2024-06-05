@@ -3,6 +3,7 @@ package router
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"regexp"
 	"strings"
@@ -81,7 +82,7 @@ func (rt *Router) serve(w http.ResponseWriter, r *http.Request) {
 	// inform user that method isn't allowed.
 	if len(allow) > 0 {
 		w.Header().Set("Allow", strings.Join(allow, ", "))
-		http.Error(w, util.NewHttpStatusMsg(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		util.Status405APINotAllowed(w, errors.New("invalid route method supplied"))
 		return
 	}
 	http.NotFound(w, r)

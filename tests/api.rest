@@ -1,12 +1,15 @@
-### LIST
+### Users - LIST
+GET http://localhost:8080/api/v1/users
+
+### Messages - LIST
 GET http://localhost:8080/api/v1/messages
 
 ### CREATE
-POST http://localhost:8080/api/v1/messages/268f7cbb-b719-4d5f-b8d3-c03d985b768c
+POST http://localhost:8080/api/v1/messages/ffc44559-044d-4525-ae8a-4bd37f2a3d7a
 Accept: application/json
 
 {
-    "message": "tobedeleted"
+    "message": "notpalindrome"
 }
 
 ### UPDATE

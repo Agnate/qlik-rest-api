@@ -92,7 +92,8 @@ func (s *MessageStorage) get(uuid uuid.UUID, createDate time.Time) (*Message, er
 
 func (s *MessageStorage) Update(msg *Message) (*Message, error) {
 	// Update the Message.
-	result, err := s.db.Exec("UPDATE messages SET message = $1, is_palindrome = $2, last_updated_by = $3, last_updated = $4 WHERE uuid = $5 AND create_date = $6 AND last_updated = $7 AND logical_delete = $8",
+	result, err := s.db.Exec("UPDATE messages SET message = $1, is_palindrome = $2, last_updated_by = $3, last_updated = $4 "+
+		"WHERE uuid = $5 AND create_date = $6 AND last_updated = $7 AND logical_delete = $8",
 		msg.Message, msg.Palindrome, msg.LastUpdatedBy, time.Now(), msg.UUID, msg.CreateDate, msg.LastUpdated, false)
 	if err != nil {
 		// TODO: Database errors should have better logging so they can be monitored and fixed.
@@ -104,10 +105,13 @@ func (s *MessageStorage) Update(msg *Message) (*Message, error) {
 	rows, _ := result.RowsAffected()
 	if rows <= 0 {
 		// TODO: Database errors should have better logging so they can be monitored and fixed.
+		// TODO: Prefer to use custom errors here so we can have better error handling to users.
 		return nil, errors.New("no rows updated")
 	}
 
 	// Retrieve the message.
+	// TODO: Make this transaction-based to avoid inconsistent read (if another update/delete)
+	// has happened in between UPDATE and READ.
 	updatedMsg, err := s.Read(msg.UUID, msg.CreateDate)
 	if err != nil {
 		// TODO: Database errors should have better logging so they can be monitored and fixed.
@@ -119,7 +123,8 @@ func (s *MessageStorage) Update(msg *Message) (*Message, error) {
 
 func (s *MessageStorage) Delete(msg *Message) (*Message, error) {
 	// Delete the Message.
-	result, err := s.db.Exec("UPDATE messages SET logical_delete = $1, last_updated_by = $2, last_updated = $3 WHERE uuid = $4 AND create_date = $5 AND last_updated = $6 AND logical_delete = $7",
+	result, err := s.db.Exec("UPDATE messages SET logical_delete = $1, last_updated_by = $2, last_updated = $3 "+
+		"WHERE uuid = $4 AND create_date = $5 AND last_updated = $6 AND logical_delete = $7",
 		true, msg.LastUpdatedBy, time.Now(), msg.UUID, msg.CreateDate, msg.LastUpdated, false)
 	if err != nil {
 		// TODO: Database errors should have better logging so they can be monitored and fixed.
@@ -135,6 +140,8 @@ func (s *MessageStorage) Delete(msg *Message) (*Message, error) {
 	}
 
 	// Retrieve the message.
+	// TODO: Make this transaction-based to avoid inconsistent read (if another update/delete)
+	// has happened in between UPDATE and READ.
 	deletedMsg, err := s.get(msg.UUID, msg.CreateDate)
 	if err != nil {
 		// TODO: Database errors should have better logging so they can be monitored and fixed.

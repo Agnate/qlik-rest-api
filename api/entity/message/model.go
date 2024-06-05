@@ -22,24 +22,3 @@ type Message struct {
 }
 
 type Messages []*Message
-
-type MessageService interface {
-	Message(id int) (*Message, error)
-	Messages() ([]*Message, error)
-	CreateMessage(m *Message) error
-}
-
-// func (input *Input) ToModel() *Message {
-// 	sanitzedMsg := input.Message
-// 	// now := time.Now()
-// 	isPalindrome := false
-
-// 	return &Message{
-// 		UUID:    input.UUID,
-// 		Message: sanitzedMsg,
-// 		// CreateDate: now,
-// 		Palindrome: strconv.FormatBool(isPalindrome),
-// 		// LastUpdated: now
-// 		LastUpdatedBy: input.UUID,
-// 	}
-// }
